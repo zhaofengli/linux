@@ -28,8 +28,5 @@
 
 #include "hw_sequencer_private.h"
 
-void dcn301_edp_power_control(
-		struct dc_link *link,
-		bool power_up);
 
 #endif /* __DC_HWSS_DCN301_H__ */
