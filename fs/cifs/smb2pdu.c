@@ -163,7 +163,7 @@ smb2_reconnect(__le16 smb2_command, struct cifs_tcon *tcon,
 		return 0;
 
 	spin_lock(&cifs_tcp_ses_lock);
-	if (tcon->tidStatus == CifsExiting) {
+	if (tcon->status == TID_EXITING) {
 		/*
 		 * only tree disconnect, open, and write,
 		 * (and ulogoff which does not have tcon)
@@ -288,6 +288,9 @@ smb2_reconnect(__le16 smb2_command, struct cifs_tcon *tcon,
 			mutex_unlock(&ses->session_mutex);
 			rc = -EHOSTDOWN;
 			goto failed;
+		} else if (rc) {
+			mutex_unlock(&ses->session_mutex);
+			goto out;
 		}
 	} else {
 		mutex_unlock(&ses->session_mutex);
@@ -3858,12 +3861,14 @@ void smb2_reconnect_server(struct work_struct *work)
 	tcon = kzalloc(sizeof(struct cifs_tcon), GFP_KERNEL);
 	if (!tcon) {
 		resched = true;
-		list_del_init(&ses->rlist);
-		cifs_put_smb_ses(ses);
+		list_for_each_entry_safe(ses, ses2, &tmp_ses_list, rlist) {
+			list_del_init(&ses->rlist);
+			cifs_put_smb_ses(ses);
+		}
 		goto done;
 	}
 
-	tcon->tidStatus = CifsGood;
+	tcon->status = TID_GOOD;
 	tcon->retry = false;
 	tcon->need_reconnect = false;
 
@@ -3902,7 +3907,8 @@ SMB2_echo(struct TCP_Server_Info *server)
 	cifs_dbg(FYI, "In echo request for conn_id %lld\n", server->conn_id);
 
 	spin_lock(&cifs_tcp_ses_lock);
-	if (server->tcpStatus == CifsNeedNegotiate) {
+	if (server->ops->need_neg &&
+	    server->ops->need_neg(server)) {
 		spin_unlock(&cifs_tcp_ses_lock);
 		/* No need to send echo on newly established connections */
 		mod_delayed_work(cifsiod_wq, &server->reconnect, 0);
