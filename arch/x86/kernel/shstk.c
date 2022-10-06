@@ -121,8 +121,9 @@ int shstk_setup(void)
 
 	xstate = start_update_xsave_msrs(XFEATURE_CET_USER);
 	err = xsave_wrmsrl(xstate, MSR_IA32_PL3_SSP, addr + size);
-	if (!err)
-		err = xsave_wrmsrl(xstate, MSR_IA32_U_CET, CET_SHSTK_EN);
+	if (!err) {
+		err = xsave_wrmsrl(xstate, MSR_IA32_U_CET, CET_SHSTK_EN | CET_ENDBR_EN);
+	}
 	end_update_xsave_msrs();
 
 	if (err) {
@@ -274,7 +275,7 @@ int shstk_disable(void)
 	xstate = start_update_xsave_msrs(XFEATURE_CET_USER);
 	/* Disable WRSS too when disabling shadow stack */
 	err = xsave_set_clear_bits_msrl(xstate, MSR_IA32_U_CET, 0,
-					CET_SHSTK_EN | CET_WRSS_EN);
+					CET_SHSTK_EN | CET_WRSS_EN | CET_ENDBR_EN);
 	if (!err)
 		err = xsave_wrmsrl(xstate, MSR_IA32_PL3_SSP, 0);
 	end_update_xsave_msrs();
