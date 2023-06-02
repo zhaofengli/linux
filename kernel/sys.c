@@ -1244,7 +1244,25 @@ SYSCALL_DEFINE0(setsid)
 
 DECLARE_RWSEM(uts_sem);
 
-#ifdef COMPAT_UTS_MACHINE
+#ifdef CONFIG_ARM64
+static int override_architecture(struct new_utsname *name)
+{
+	if (personality(current->personality) == PER_LINUX32) {
+		if ((current->personality & (SHORT_INODE | WHOLE_SECONDS)) == (SHORT_INODE | WHOLE_SECONDS)) {
+			return copy_to_user(name->machine, "armv7l\0\0", sizeof("armv7l\0\0"));
+		}
+		if (current->personality & SHORT_INODE) {
+			return copy_to_user(name->machine, "armv6l\0\0", sizeof("armv6l\0\0"));
+		}
+		if (current->personality & WHOLE_SECONDS) {
+			return copy_to_user(name->machine, "armv5tel\0\0", sizeof("armv5tel\0\0"));
+		}
+		return copy_to_user(name->machine, COMPAT_UTS_MACHINE,
+			sizeof(COMPAT_UTS_MACHINE));
+	}
+	return 0;
+}
+#elif defined(COMPAT_UTS_MACHINE)
 #define override_architecture(name) \
 	(personality(current->personality) == PER_LINUX32 && \
 	 copy_to_user(name->machine, COMPAT_UTS_MACHINE, \
