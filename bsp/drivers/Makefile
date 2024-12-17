@@ -111,3 +111,11 @@ obj-y += andes_adaptor/
 #awlink
 obj-y += awlink/
 
+KBUILD_CFLAGS	+= -Wno-implicit-fallthrough
+KBUILD_CFLAGS	+= -Wno-array-parameter
+KBUILD_CFLAGS	+= -Wno-misleading-indentation
+KBUILD_CFLAGS	+= -Wno-implicit-function-declaration
+KBUILD_CFLAGS	+= -Wno-int-conversion
+KBUILD_CFLAGS	+= -Wno-tautological-compare
+KBUILD_CFLAGS	+= -Wno-bool-operation
+KBUILD_CFLAGS	+= -Wno-enum-int-mismatch
