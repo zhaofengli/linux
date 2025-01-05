@@ -89,6 +89,9 @@
 	 *  x24        __primary_switch() .. relocate_kernel()  current RELR displacement
 	 */
 SYM_CODE_START(primary_entry)
+#ifdef CONFIG_ARM64_APPENDED_DTB
+	bl	check_appended_dtb
+#endif
 	bl	preserve_boot_args
 	bl	init_kernel_el			// w0=cpu_boot_mode
 	adrp	x23, __PHYS_OFFSET
@@ -121,6 +124,27 @@ SYM_CODE_START_LOCAL(preserve_boot_args)
 	add	x1, x0, #0x20			// 4 x 8 bytes
 	b	dcache_inval_poc		// tail call
 SYM_CODE_END(preserve_boot_args)
+
+#ifdef CONFIG_ARM64_APPENDED_DTB
+/*
+ * [Downstream HACK] Check the appended DTB
+ */
+SYM_CODE_START_LOCAL(check_appended_dtb)
+	adr_l	x19, _edata
+	ldr	w20, [x19]
+#ifndef __AARCH64EB__
+	ldr	w21, =0xedfe0dd0		// FDT magic word
+#else
+	ldr	w21, =0xd00dfeed
+#endif
+	cmp	w20, w21
+	b.ne	1f			// no FDT found
+
+	mov	x0, x19
+1:
+	ret
+SYM_CODE_END(check_appended_dtb)
+#endif
 
 /*
  * Macro to create a table entry to the next page.
