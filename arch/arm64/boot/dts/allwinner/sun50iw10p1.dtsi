@@ -795,6 +795,7 @@
 			clocks = <&dcxo24M>;
 		};
 
+		/*
 		uart0: uart@5000000 {
 			compatible = "allwinner,sun50i-uart";
 			device_type = "uart0";
@@ -812,6 +813,17 @@
 		//	dmas = <&dma 14>;
 		//	dma-names = "tx";
 		//	use_dma = <0>;
+		};
+		*/
+		uart0: serial@5000000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x0 0x05000000 0x0 0x400>;
+			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			clocks = <&ccu CLK_BUS_UART0>;
+			resets = <&ccu RST_BUS_UART0>;
+			status = "disabled";
 		};
 
 		uart1: uart@5000400 {
